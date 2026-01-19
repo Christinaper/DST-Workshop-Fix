@@ -1,107 +1,71 @@
-# Don't Starve Together Mod Loading Issue – Workaround
+# DST Mod Fix After Steam Move – Workaround
 
-## Problem Description
+Fix *Don't Starve Together*(DST) Workshop mods not loading after moving game from one drive to another.
 
-Fix *Don't Starve Together* (DST) Workshop mods not loading after moving game installation via Steam.
-In a local Steam installation of DST, a set of 19 subscribed mods failed to load correctly in the in‑game Mods interface.
+## 🚨 Problem Description
 
-Observed symptoms:
+After moving DST using Steam's **Move Install Folder** feature:
+- Only a subset of Workshop mods loads correctly
+- Other subscribed mods appear as **incompatible**, show placeholder entries, or do not appear in the in-game Mods list
+- Steam still shows the mods as subscribed, but DST does not load their actual content
 
-* Some mods did not render at all in the Mods list.
-* Some mods appeared as incompatible or placeholder entries.
-* The number and identity of incompatible mods changed after restarting the game or modifying subscriptions.
-* In `steamapps/Workshop/Content/322330`, certain mod directories existed but contained no actual mod data (only legacy or empty files).
-* Re-subscribing affected mods via Steam did not consistently restore valid mod content.
+The same set of mods worked correctly **before** the move.  
+The issue starts immediately **after** the Steam move operation.
 
-This indicated a desynchronization between:
+**Root Cause**: Steam updates the game installation path, but DST’s Workshop resolution logic may continue to reference stale paths from the previous drive.
 
-* Steam Workshop subscription state
-* Workshop cache (`Workshop/Content/322330`)
-* Local mod loading logic in `Don't Starve Together/mods`
+## 🔧 Workaround (Manual Recovery)
 
-Directly relying on Steam subscription alone was insufficient to restore a consistent, fully loaded mod set.
+This workaround reconstructs a stable local mod state without relying on DST’s broken Workshop resolution.
 
-## Workaround
+### 1. Backup existing Workshop mods
 
-The following manual process resulted in a stable state where all 19 mods were successfully loaded in-game.
+Locate Steam Workshop content: `steamapps/workshop/content/322330`
 
-### Environment
+For each mod directory:
 
-* Steam library located on drive `D:`
-* Paths used:
+- Copy it to a temporary backup folder
+- Rename it with the `workshop_` prefix  
+  Example: `workshop_123456789`
+  
+### 2. Prepare DST mods directory
 
-  * Workshop cache: `D:\games\steamapps\Workshop\Content\322330`
-  * Local mods directory: `D:\games\steamapps\common\Don't Starve Together\mods`
+Go to: `steamapps/common/Don't Starve Together/mods`
 
-### Steps
+- Temporarily set the folder to **read-only**
+- Launch DST once, then exit  
+  (Steam may reset permissions, but copied folders will remain)
 
-1. **Backup existing Workshop mods**
+### 3. Reset Steam subscriptions
 
-   * Copy all 19 mod folders from `Workshop\Content\322330`.
-   * Add the prefix `workshop_` to each folder name.
-   * Store them in a temporary backup directory (e.g. `tmp`).
+- Unsubscribe from **all** DST Workshop mods in Steam
+- Launch DST once to clear cached mod state
+- Exit the game
 
-2. **Prevent immediate cleanup by DST**
+### 4. Re-subscribe critical mods
 
-   * Set the `mods` directory properties to *read-only*.
-   * Launch DST once.
-   * Result:
+- Re-subscribe only to the mods that must stay managed by Steam
+- Launch DST and verify these mods now load correctly
+- Confirm their Workshop folders contain full data (not empty / legacy-only)
 
-     * DST reset directory permissions.
-     * The `workshop_xxx` folders were preserved.
-     * The Mods UI began showing previously missing/incompatible entries, confirming partial recognition.
+### 5. Restore remaining mods manually
 
-3. **Reset Steam subscription state**
+- Copy the backed-up `workshop_xxx` folders into: `steamapps/common/Don't Starve Together/mods`
+- Do **not** re-subscribe these mods in Steam
 
-   * Unsubscribe from *all* DST mods in Steam.
-   * Launch DST.
-   * Result:
+### 6. Verify
 
-     * 14 mods appeared as loaded.
-     * 5 mods appeared as incompatible placeholders.
+- Launch DST
+- All restored mods should appear and load correctly
+- Steam-managed mods will update normally
+- Manually restored mods remain stable but will not auto-update
 
-4. **Identify corrupted mods**
+### ⚠️ Notes and Limitations
 
-   * Inspect the 5 incompatible mods in `Workshop\Content\322330`.
-   * Observation:
+- Manually installed mods will **not receive Steam updates**.
+- Updating those mods requires repeating parts of this process.
 
-     * Their directories contained no valid mod data (empty or legacy-only).
-
-5. **Recover corrupted mods**
-
-   * Delete the 14 valid mods from the local mods directory (they were already backed up).
-   * Re-subscribe only to the 5 corrupted mods in Steam.
-   * Launch DST.
-   * Result:
-
-     * The 5 mods were freshly downloaded.
-     * Valid data appeared in `Workshop\Content\322330`.
-
-6. **Reconstruct full mod set manually**
-
-   * Copy the newly downloaded 5 mods.
-   * Add `workshop_` prefix and back them up.
-   * Combine:
-
-     * 14 previously backed-up mods
-     * 5 freshly recovered mods
-   * Place all 19 `workshop_xxx` folders into `Don't Starve Together\mods`.
-
-7. **Final state**
-
-   * Launch DST.
-   * All 19 mods load correctly and appear normally in the Mods interface.
-   * Steam subscription status:
-
-     * 5 mods subscribed (update-capable)
-     * 14 mods manually installed (static, no auto-update)
-
-### Notes and Limitations
-
-* This is a **stable but temporary** equilibrium.
-* Manually installed mods will **not receive Steam updates**.
-* Updating those mods requires repeating parts of this process.
-* The issue appears related to partial or failed Workshop downloads combined with DST’s mod cache behavior.
+This state is stable and avoids DST repeatedly resolving Workshop paths incorrectly after a Steam move.
 
 ---
 
